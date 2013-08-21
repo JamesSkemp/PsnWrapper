@@ -22,6 +22,8 @@ namespace PsnWrapper
 		public string TestJid { get; set; }
 		public string TestProfileData { get; set; }
 		public string TestTrophyData { get; set; }
+		public string TestGamesData { get; set; }
+		public string TestGameData { get; set; }
 
 		public Client()
 		{
@@ -141,6 +143,44 @@ namespace PsnWrapper
 			var postData = string.Format("<nptrophy platform='ps3' sv='{0}'><jid>{1}</jid><start>1</start><max>64</max><pf>ps3</pf><pf>psp2</pf></nptrophy>", this.Firmware, this.User.Jid);
 
 			this.TestTrophyData = ApiRequest(searchUri, networkCredentials, postData);
+
+			return true;
+		}
+
+		public bool GetGames()
+		{
+			if (string.IsNullOrWhiteSpace(this.User.Jid))
+			{
+				return false;
+			}
+
+			var searchUri = "http://trophy.ww.np.community.playstation.net/trophy/func/get_title_list";
+			var credentials = this.TrophyLogin.Split(':');
+			var networkCredentials = new System.Net.NetworkCredential(credentials[0], this.TrophyLogin.Replace(credentials[0] + ":", ""));
+			var postData = string.Format("<nptrophy platform='ps3' sv='{0}'><jid>{1}</jid><start>1</start><max>64</max></nptrophy>", this.Firmware, this.User.Jid);
+
+			this.TestGamesData = ApiRequest(searchUri, networkCredentials, postData);
+
+			return true;
+		}
+
+		public bool GetTrophies(string gameId)
+		{
+			if (string.IsNullOrWhiteSpace(this.User.Jid))
+			{
+				return false;
+			}
+			else if (string.IsNullOrWhiteSpace(gameId))
+			{
+				return false;
+			}
+
+			var searchUri = "http://trophy.ww.np.community.playstation.net/trophy/func/get_trophies";
+			var credentials = this.TrophyLogin.Split(':');
+			var networkCredentials = new System.Net.NetworkCredential(credentials[0], this.TrophyLogin.Replace(credentials[0] + ":", ""));
+			var postData = string.Format("<nptrophy platform='ps3' sv='{0}'><jid>{1}</jid><list><info npcommid='{2}'><target>FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF</target></info></list></nptrophy>", this.Firmware, this.User.Jid, gameId);
+
+			this.TestGameData = ApiRequest(searchUri, networkCredentials, postData);
 
 			return true;
 		}
