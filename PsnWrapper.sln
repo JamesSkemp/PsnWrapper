@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsnWrapper", "PsnWrapper\PsnWrapper.csproj", "{969E3076-2783-4C4D-8C93-72C64C1C2397}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{969E3076-2783-4C4D-8C93-72C64C1C2397}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{969E3076-2783-4C4D-8C93-72C64C1C2397}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{969E3076-2783-4C4D-8C93-72C64C1C2397}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{969E3076-2783-4C4D-8C93-72C64C1C2397}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
