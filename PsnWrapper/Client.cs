@@ -147,17 +147,54 @@ namespace PsnWrapper
 			return true;
 		}
 
+		/// <summary>
+		/// Get the last 8 games played.
+		/// </summary>
+		/// <returns>True or an exception.</returns>
 		public bool GetGames()
+		{
+			return GetGames(1, 8);
+		}
+
+		/// <summary>
+		/// Get the last x games played.
+		/// </summary>
+		/// <param name="count">Number of games to request. Currently must be 64 or less.</param>
+		/// <returns>True or an exception.</returns>
+		public bool GetGames(int count)
+		{
+			if (count > 64)
+			{
+				throw new NotSupportedException("Count must be 64 or less.");
+			}
+			return GetGames(1, count);
+		}
+
+		/// <summary>
+		/// Get games played, based upon a start number and count.
+		/// </summary>
+		/// <param name="start">First game to grab, with 1 being the last game played.</param>
+		/// <param name="count">Number of games to grab. Currently must be 64 or less.</param>
+		/// <returns>True or an exception.</returns>
+		public bool GetGames(int start, int count)
 		{
 			if (string.IsNullOrWhiteSpace(this.User.Jid))
 			{
 				return false;
 			}
+			if (start < 1)
+			{
+				throw new ArgumentOutOfRangeException("start", "Start must be 1 or greater.");
+			}
+			if (count > 64)
+			{
+				throw new ArgumentOutOfRangeException("count", "Count must be 64 or less.");
+			}
 
 			var searchUri = "http://trophy.ww.np.community.playstation.net/trophy/func/get_title_list";
 			var credentials = this.TrophyLogin.Split(':');
 			var networkCredentials = new System.Net.NetworkCredential(credentials[0], this.TrophyLogin.Replace(credentials[0] + ":", ""));
-			var postData = string.Format("<nptrophy platform='ps3' sv='{0}'><jid>{1}</jid><start>1</start><max>64</max></nptrophy>", this.Firmware, this.User.Jid);
+			var postData = string.Format("<nptrophy platform='ps3' sv='{0}'><jid>{1}</jid><start>{2}</start><max>{3}</max><pf>ps3</pf><pf>psp2</pf></nptrophy>", this.Firmware, this.User.Jid, start, count);
 
 			this.TestGamesData = ApiRequest(searchUri, networkCredentials, postData);
 
