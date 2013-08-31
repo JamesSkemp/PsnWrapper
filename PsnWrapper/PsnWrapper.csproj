@@ -42,11 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiGame.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="Login.cs" />
     <Compile Include="Profile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Psn.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Uris.cs" />
+    <Compile Include="UserDataCompiler.cs" />
     <Compile Include="UserGame.cs" />
     <Compile Include="UserProfile.cs" />
     <Compile Include="UserTrophy.cs" />
