@@ -47,6 +47,9 @@
     <Compile Include="Profile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Uris.cs" />
+    <Compile Include="UserGame.cs" />
+    <Compile Include="UserProfile.cs" />
+    <Compile Include="UserTrophy.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
