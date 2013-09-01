@@ -32,6 +32,35 @@ namespace PsnWrapper
 			public UserGame()
 			{
 			}
+
+			/// <summary>
+			/// Return the total earned points for a game, based upon earned trophies.
+			/// </summary>
+			/// <param name="includePlatinum">Whether to include platinum trophies in the count, which are not included in the number of points a game is worth.</param>
+			/// <returns>Total points earned by trophies.</returns>
+			public int CalculateEarnedPoints(bool includePlatinum = false)
+			{
+				var platinumPoints = includePlatinum ? 180 : 0;
+
+				return (15 * this.BronzeEarned)
+					+ (30 * this.SilverEarned)
+					+ (90 * this.GoldEarned)
+					+ (platinumPoints * this.PlatinumEarned)
+					;
+			}
+
+			/// <summary>
+			/// Return the progress of a game, based upon points.
+			/// </summary>
+			/// <returns>Percent, as int, of game progress.</returns>
+			public int CalculateProgress()
+			{
+				if (this.TotalPoints == 0)
+				{
+					return 0;
+				}
+				return 100 * this.EarnedPoints / this.TotalPoints;
+			}
 		}
 	}
 }

@@ -18,6 +18,10 @@ namespace PsnWrapper
 			/// </summary>
 			public string RawDataPath { get; set; }
 			/// <summary>
+			/// Path to grab trophy details from.
+			/// </summary>
+			public string TrophyDetailsPath { get; set; }
+			/// <summary>
 			/// Path to save user data to.
 			/// </summary>
 			public string OutputPath { get; set; }
@@ -51,6 +55,10 @@ namespace PsnWrapper
 				else if (string.IsNullOrWhiteSpace(this.OutputPath))
 				{
 					throw new NotImplementedException("Output Path must be populated.");
+				}
+				else if (string.IsNullOrWhiteSpace(this.TrophyDetailsPath))
+				{
+					throw new NotImplementedException("Trophy Details Path must be populated.");
 				}
 				else if (string.IsNullOrWhiteSpace(this.FileNameFormat))
 				{
@@ -88,6 +96,8 @@ namespace PsnWrapper
 				if (this.CompilerReady())
 				{
 					var currentTime = DateTime.Now.ToString("yyyyMMddHHmmss");
+					var filePath = Path.Combine(this.OutputPath, this.FileNameFormat + ".xml");
+					var savePath = "";
 
 					var userProfile = new UserProfile();
 					var profileXml = XDocument.Load(Path.Combine(this.RawDataPath, "profile.xml")).Root;
@@ -109,7 +119,7 @@ namespace PsnWrapper
 					userProfile.TotalEarned = userProfile.BronzeEarned + userProfile.SilverEarned + userProfile.GoldEarned + userProfile.PlatinumEarned;
 					var gamesFiles = new DirectoryInfo(this.RawDataPath).GetFiles("games_*.xml").Select(f => f.FullName);
 
-					var userGames = new List<ApiGame>();
+					var apiGames = new List<ApiGame>();
 
 					foreach (var gamesFile in gamesFiles)
 					{
@@ -131,69 +141,117 @@ namespace PsnWrapper
 							gameInfo.Platinum = int.Parse(game.Element("types").Attribute("platinum").Value);
 							gameInfo.Updated = DateTime.Parse(game.Element("last-updated").Value);
 
-							var existingGame = userGames.FirstOrDefault(g => g.Id == gameInfo.Id);
+							var existingGame = apiGames.FirstOrDefault(g => g.Id == gameInfo.Id);
 							if (existingGame != null && existingGame.Updated < gameInfo.Updated)
 							{
 								// This game is already added, but needs to be updated.
-								userGames.Remove(existingGame);
-								userGames.Add(gameInfo);
+								apiGames.Remove(existingGame);
+								apiGames.Add(gameInfo);
 							}
 							else
 							{
-								userGames.Add(gameInfo);
+								apiGames.Add(gameInfo);
 							}
 						}
 					}
-					userProfile.LastUpdate = userGames.Select(g => g.Updated).OrderByDescending(g => g).FirstOrDefault();
+					apiGames = apiGames.OrderByDescending(g => g.Updated).ToList();
+
+					userProfile.LastUpdate = apiGames.Select(g => g.Updated).FirstOrDefault();
 					if (userProfile.LastUpdate == DateTime.MinValue)
 					{
 						userProfile.LastUpdate = null;
 					}
 					// Profile is done at this point.
 
-
-
-
-					// todo - games (x1) and trophies (x?)
-
-					foreach (var apiGame in userGames)
+					var userGames = new List<UserGame>();
+					int orderPlayed = 1;
+					// Get game data and add to games plus create trophies- file.
+					foreach (var apiGame in apiGames)
 					{
-						// todo get game data and add to games plus create trophies- file.
+						var hasTrophyDetails = File.Exists(Path.Combine(this.TrophyDetailsPath, string.Format("{0}.xml", apiGame.Id)));
+						var hasEarnedDetails = File.Exists(Path.Combine(this.RawDataPath, string.Format("game-{0}.xml", apiGame.Id)));
+						if (hasTrophyDetails && hasEarnedDetails)
+						{
+							var trophyDetailsXml = XDocument.Load(Path.Combine(this.TrophyDetailsPath, string.Format("{0}.xml", apiGame.Id))).Root;
+							var earnedDetailsXml = XDocument.Load(Path.Combine(this.RawDataPath, string.Format("game-{0}.xml", apiGame.Id))).Root;
+
+							var gameDetails = trophyDetailsXml.Descendants("Game").FirstOrDefault();
+
+							var userGame = new UserGame();
+							userGame.Id = apiGame.Id;
+							userGame.IdEurope = gameDetails.Element("IdEurope").Value;
+							userGame.Title = gameDetails.Element("Title").Value;
+							userGame.ImageUrl = gameDetails.Element("Image").Value;
+							userGame.BronzeEarned = apiGame.Bronze;
+							userGame.SilverEarned = apiGame.Silver;
+							userGame.GoldEarned = apiGame.Gold;
+							userGame.PlatinumEarned = apiGame.Platinum;
+							userGame.TotalEarned = apiGame.Bronze + apiGame.Silver + apiGame.Gold + apiGame.Platinum;
+							userGame.OrderPlayed = orderPlayed++;
+							userGame.LastUpdated = apiGame.Updated;
+							userGame.TotalPoints = int.Parse(gameDetails.Element("TotalPoints").Value);
+							userGame.EarnedPoints = userGame.CalculateEarnedPoints();
+							userGame.Progress = userGame.CalculateProgress().ToString();
+							userGame.Platform = apiGame.Platform;
+
+							userGames.Add(userGame);
+
+							// Compile trophy data.
+							var userTrophies = new List<UserTrophy>();
+							foreach (var trophyDetail in trophyDetailsXml.Descendants("Trophy"))
+							{
+								var userTrophy = new UserTrophy();
+								userTrophy.Id = trophyDetail.Element("Id").Value;
+								userTrophy.GameId = apiGame.Id;
+								userTrophy.Title = trophyDetail.Element("Title").Value;
+								userTrophy.ImageUrl = trophyDetail.Element("Image").Value;
+								userTrophy.Description = trophyDetail.Element("Description").Value;
+								userTrophy.Type = ParseTrophyType(trophyDetail.Element("Type").Value);
+								userTrophy.Hidden = bool.Parse(trophyDetail.Element("Hidden").Value);
+								userTrophy.Platform = apiGame.Platform;
+
+								foreach (var earnedDetail in earnedDetailsXml.Descendants("trophy"))
+								{
+									if (earnedDetail.Attribute("id").Value == userTrophy.Id)
+									{
+										userTrophy.Earned = DateTime.Parse(earnedDetail.Value);
+										break;
+									}
+								}
+								userTrophies.Add(userTrophy);
+							}
+
+							PerformBackup("trophies-" + apiGame.Id, "__{0}-" + currentTime);
+							savePath = string.Format(filePath, "trophies-" + apiGame.Id);
+							SaveTrophyXml(savePath, userTrophies);
+						}
+						else
+						{
+							DebugInfo.Add(apiGame.Id);
+							DebugInfo.Add(hasTrophyDetails);
+							DebugInfo.Add(hasEarnedDetails);
+						}
 					}
 
-
-
-
-					/*var gamesXml = new List<XElement>();
-
-
-
-					userProfile.LastUpdate = null;
-
-
-					
-					var gameXml = new List<XElement>();
-					var gameFiles = new DirectoryInfo(this.RawDataPath).GetFiles("game-*.xml").Select(f => f.FullName);
-					foreach (var gameFile in gamesFiles)
-					{
-						gameXml.Add(XDocument.Load(gameFile).Root);
-					}*/
-
 					#region Save data
-					var filePath = Path.Combine(this.OutputPath, this.FileNameFormat + ".xml");
-					var path = "";
 					// Profile
 					PerformBackup("profile", "__{0}-" + currentTime);
-					path = string.Format(filePath, "profile");
+					savePath = string.Format(filePath, "profile");
 					var psnProfile = new XmlSerializer(userProfile.GetType());
-					using (StreamWriter writer = new StreamWriter(path))
+					using (StreamWriter writer = new StreamWriter(savePath))
 					{
 						psnProfile.Serialize(writer, userProfile);
 					}
 					// Games
-					// todo
+					PerformBackup("games", "__{0}-" + currentTime);
+					savePath = string.Format(filePath, "games");
+					var psnGames = new XmlSerializer(userGames.GetType());
+					using (StreamWriter writer = new StreamWriter(savePath))
+					{
+						psnGames.Serialize(writer, userGames);
+					}
 					// Trophies
-					// todo
+					// done above
 					#endregion
 					return true;
 				}
@@ -220,6 +278,23 @@ namespace PsnWrapper
 					{
 						File.Copy(filePath, Path.Combine(outputDirectory, string.Format(backupFileFormat, string.Format(this.FileNameFormat, fileName)) + ".xml"));
 					}
+					return true;
+				}
+				return false;
+			}
+
+			/// <summary>
+			/// Save a collection of user trophies to an XML file.
+			/// </summary>
+			/// <param name="path">Path to save the file to.</param>
+			/// <param name="trophies">Collection of trophies to save.</param>
+			/// <returns>True if data was saved.</returns>
+			internal bool SaveTrophyXml(string path, List<UserTrophy> trophies)
+			{
+				var serializer = new XmlSerializer(trophies.GetType());
+				using (var writer = new StreamWriter(path))
+				{
+					serializer.Serialize(writer, trophies);
 					return true;
 				}
 				return false;

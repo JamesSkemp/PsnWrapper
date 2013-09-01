@@ -34,5 +34,27 @@ namespace PsnWrapper
 			Gold,
 			Platinum
 		}
+
+		/// <summary>
+		/// Parse a string and return the applicable trophy type.
+		/// </summary>
+		/// <param name="trophyType">String of text to parse.</param>
+		public static TrophyType? ParseTrophyType(string trophyType)
+		{
+			switch (trophyType.ToLower())
+			{
+				case "bronze":
+					return TrophyType.Bronze;
+				case "silver":
+					return TrophyType.Silver;
+				case "gold":
+					return TrophyType.Gold;
+				case "platinum":
+					return TrophyType.Platinum;
+				default:
+					break;
+			}
+			return null;
+		}
 	}
 }
