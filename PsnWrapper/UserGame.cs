@@ -23,6 +23,7 @@ namespace PsnWrapper
 			public int GoldEarned { get; set; }
 			public int PlatinumEarned { get; set; }
 			public int TotalEarned { get; set; }
+			public int PossibleTrophies { get; set; }
 			public int OrderPlayed { get; set; }
 			public DateTime? LastUpdated { get; set; }
 			public int TotalPoints { get; set; }

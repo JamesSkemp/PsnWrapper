@@ -194,11 +194,14 @@ namespace PsnWrapper
 							userGame.Progress = userGame.CalculateProgress().ToString();
 							userGame.Platform = apiGame.Platform;
 
+							var trophyDetails = trophyDetailsXml.Descendants("Trophy");
+							userGame.PossibleTrophies = trophyDetails.Count();
+
 							userGames.Add(userGame);
 
 							// Compile trophy data.
 							var userTrophies = new List<UserTrophy>();
-							foreach (var trophyDetail in trophyDetailsXml.Descendants("Trophy"))
+							foreach (var trophyDetail in trophyDetails)
 							{
 								var userTrophy = new UserTrophy();
 								userTrophy.Id = trophyDetail.Element("Id").Value;
@@ -214,7 +217,7 @@ namespace PsnWrapper
 								{
 									if (earnedDetail.Attribute("id").Value == userTrophy.Id)
 									{
-										userTrophy.Earned = DateTime.Parse(earnedDetail.Value);
+										userTrophy.Earned = DateTime.Parse(earnedDetail.Value).ToUniversalTime().ToLocalTime();
 										break;
 									}
 								}
