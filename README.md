@@ -69,4 +69,4 @@ Currently you'll need a trophy file, from , for each game that you want to compi
 		ex.Dump();
 	}
 
-Easier documentation coming soon.
+Easier documentation coming soon. (See https://github.com/JamesSkemp/XboxApiWrapper or https://github.com/JamesSkemp/XboxLeadersWrapper for an example of what I'm shooting for.)
