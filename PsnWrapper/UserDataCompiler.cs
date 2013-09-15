@@ -210,7 +210,8 @@ namespace PsnWrapper
 								userTrophy.ImageUrl = trophyDetail.Element("Image").Value;
 								userTrophy.Description = trophyDetail.Element("Description").Value;
 								userTrophy.Type = ParseTrophyType(trophyDetail.Element("Type").Value);
-								userTrophy.Hidden = bool.Parse(trophyDetail.Element("Hidden").Value);
+								// Trophy data can now have null values for this. If that's the case, assume it's hidden to be on the safe side.
+								userTrophy.Hidden = !string.IsNullOrWhiteSpace(trophyDetail.Element("Hidden").Value) ? bool.Parse(trophyDetail.Element("Hidden").Value) : true;
 								userTrophy.Platform = apiGame.Platform;
 
 								foreach (var earnedDetail in earnedDetailsXml.Descendants("trophy"))
