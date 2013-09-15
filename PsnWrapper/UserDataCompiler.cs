@@ -142,7 +142,7 @@ namespace PsnWrapper
 							gameInfo.Updated = DateTime.Parse(game.Element("last-updated").Value);
 
 							var existingGame = apiGames.FirstOrDefault(g => g.Id == gameInfo.Id);
-							if (existingGame != null && existingGame.Updated < gameInfo.Updated)
+							if (existingGame != null && existingGame.Updated <= gameInfo.Updated)
 							{
 								// This game is already added, but needs to be updated.
 								apiGames.Remove(existingGame);
