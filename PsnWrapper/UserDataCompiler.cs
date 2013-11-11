@@ -84,7 +84,7 @@ namespace PsnWrapper
 					throw new NotImplementedException("No games file(s) found.");
 				}
 				var hasGameFiles = rawDataFiles.Any(f => f.Name.StartsWith("game-"));
-				if (!hasGamesFile)
+				if (!hasGameFiles)
 				{
 					throw new NotImplementedException("No game file(s) found.");
 				}
