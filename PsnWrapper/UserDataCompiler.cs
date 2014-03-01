@@ -190,7 +190,8 @@ namespace PsnWrapper
 							userGame.OrderPlayed = orderPlayed++;
 							userGame.LastUpdated = apiGame.Updated;
 							userGame.TotalPoints = int.Parse(gameDetails.Element("TotalPoints").Value);
-							userGame.EarnedPoints = userGame.CalculateEarnedPoints();
+							// It appears that PS4 games now include platinums in the total points count. Should probably just overwrite this for all platforms.
+							userGame.EarnedPoints = userGame.CalculateEarnedPoints(apiGame.Platform.ToLower() == "ps4");
 							userGame.Progress = userGame.CalculateProgress().ToString();
 							userGame.Platform = apiGame.Platform;
 
